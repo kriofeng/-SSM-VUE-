@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upc.fpbackstage.mapper.blogFindPost">
+    <resultMap id="postMap" type="com.upc.fpbackstage.po.Articleinfo">
+        <id property="articleId" column="articleId"></id>
+        <result property="userId" column="userId"></result>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <result property="views" column="views"></result>
+        <result property="date" column="date"></result>
+        <result property="commentCount" column="commentCount"></result>
+        <result property="markedCount" column="markedCount"></result>
+        <result property="likedCount" column="likedCount"></result>
+        <result property="lableId" column="lableId"></result>
+        <result property="area" column="area"></result>
+        <association property="userbaseinfo" javaType="com.upc.fpbackstage.po.Userbaseinfo">
+            <result property="userName" column="userName"></result>
+            <result property="headPortrait" column="headPortrait"></result>
+        </association>
+        <association property="label" javaType="com.upc.fpbackstage.po.Label">
+            <result property="labelId" column="labelId"></result>
+            <result property="labelContent" column="labelContent"></result>
+        </association>
+    </resultMap>
+    <select id="findBlogPost" resultMap="postMap">
+        select labelContent,userName,articleId, articleinfo.userId, type, title, content, views, date, commentCount, markedCount, likedCount, lableId, area,headPortrait,content
+        from articleinfo,userbaseinfo,label
+        where articleinfo.userId = userbaseinfo.userId and type=2 and area=labelId ORDER BY date
+    </select>
+    <select id="findHotUser" resultMap="postMap">
+        SELECT userbaseinfo.userId,userName, userbaseinfo.headPortrait from userbaseinfo,articleinfo
+        where userbaseinfo.userId=articleinfo.userId and type=2 GROUP BY userbaseinfo.userId
+        ORDER BY SUM(commentCount) LIMIT 2
+    </select>
+    <select id="findHotPost" resultMap="postMap">
+        select views,articleId,title  from articleinfo where type=2 ORDER BY views Desc limit 2
+    </select>
+    <select id="findMyBlog" resultMap="postMap" parameterType="com.upc.fpbackstage.dto.articleInfoDto">
+        SELECT a.*,u.userName,u.headPortrait
+        from userbaseinfo u,articleinfo a
+        WHERE u.userId=a.userId and a.userId=#{userId} and a.articleStatus=1 and a.type=2
+    </select>
+
+</mapper>

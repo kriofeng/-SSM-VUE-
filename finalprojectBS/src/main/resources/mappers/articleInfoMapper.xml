@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upc.fpbackstage.mapper.articleInfoMapper">
+    <resultMap id="postMap" type="com.upc.fpbackstage.po.Articleinfo">
+        <id property="articleId" column="articleId"></id>
+        <result property="userId" column="userId"></result>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <result property="views" column="views"></result>
+        <result property="date" column="date"></result>
+        <result property="commentCount" column="commentCount"></result>
+        <result property="markedCount" column="markedCount"></result>
+        <result property="likedCount" column="likedCount"></result>
+        <result property="lableId" column="lableId"></result>
+        <result property="area" column="area"></result>
+        <association property="userbaseinfo" javaType="com.upc.fpbackstage.po.Userbaseinfo">
+            <result property="userName" column="userName"></result>
+            <result property="headPortrait" column="headPortrait"></result>
+        </association>
+        <association property="userfollow" javaType="com.upc.fpbackstage.po.Userfollow">
+            <result property="followerId" column="followerId"></result>
+            <result property="followedId" column="followedId"></result>
+        </association>
+    </resultMap>
+    <update id="updateLableId">
+        update articleinfo
+        set lableId = #{changeType}
+        where articleId = #{articleId}
+    </update>
+    <select id="findAllPosts" resultMap="postMap">
+        select
+            a.articleId, a.userId, title, content, views, date, commentCount, markedCount, likedCount, lableId,area,
+            b.userName, b.headPortrait
+        from articleinfo a, userbaseinfo b
+        where a.userId = b.userId and a.type = 1 and a.articleStatus = 1
+    </select>
+    <select id="findPostsByParam" resultMap="postMap"
+            parameterType="com.upc.fpbackstage.dto.articleInfoDto">
+        select
+            a.articleId, a.userId, title, content, views, date, commentCount, markedCount, likedCount, lableId,area,
+            b.userName, b.headPortrait
+        from articleinfo a, userbaseinfo b
+        where a.userId = b.userId and a.type = 1 and a.articleStatus = 1
+        <if test="articleId != null and articleId != ''">
+            and articleId like concat('%',#{articleId},'%')
+        </if>
+        <if test="title != null and title != ''">
+            and title like concat('%',#{title},'%')
+        </if>
+        <if test="userId != null and userId != ''">
+            and a.userId like concat('%',#{userId},'%')
+        </if>
+        <if test="userName != null and userName !=''">
+            and b.userName like concat('%',#{userName},'%')
+        </if>
+        <if test="lableId != null and lableId !=''">
+            and lableId = #{lableId}
+        </if>
+    </select>
+    <select id="findAllBlogs" resultMap="postMap">
+        select
+            a.articleId, a.userId, title, content, views, date, commentCount, markedCount, likedCount, lableId,area,
+            b.userName, b.headPortrait
+        from articleinfo a, userbaseinfo b
+        where a.userId = b.userId and a.type = 2 and a.articleStatus = 1 and b.userStatus=1
+    </select>
+    <select id="findBlogsByParam" resultMap="postMap"
+            parameterType="com.upc.fpbackstage.dto.articleInfoDto">
+        select
+        a.articleId, a.userId, title, content, views, date, commentCount, markedCount, likedCount, lableId,area,
+        b.userName, b.headPortrait
+        from articleinfo a, userbaseinfo b
+        where a.userId = b.userId and a.type = 2 and a.articleStatus = 1 and b.userStatus=1
+        <if test="articleId != null and articleId != ''">
+            and articleId like concat('%',#{articleId},'%')
+        </if>
+        <if test="title != null and title != ''">
+            and title like concat('%',#{title},'%')
+        </if>
+        <if test="userId != null and userId != ''">
+            and a.userId like concat('%',#{userId},'%')
+        </if>
+        <if test="userName != null and userName !=''">
+            and b.userName like concat('%',#{userName},'%')
+        </if>
+        <if test="area != null and area !=''">
+            and area = #{area}
+        </if>
+    </select>
+    <select id="focusTrend" resultMap="postMap"
+    parameterType="com.upc.fpbackstage.dto.articleInfoDto">
+        select au.userName,a.title,a.articleId,a.date,a.likedCount,a.markedCount,a.commentCount,a.views,a.area,a.content
+        from userbaseinfo au,userbaseinfo bu,articleinfo a ,userfollow uf
+        where au.userId=uf.followedId and bu.userId=uf.followerId and au.userId=a.userId and a.type=2 and uf.followerId=#{followerId}
+    </select>
+</mapper>

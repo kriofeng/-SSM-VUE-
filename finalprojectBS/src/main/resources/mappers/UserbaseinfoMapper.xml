@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.upc.fpbackstage.mapper.UserbaseinfoMapper">
+    <insert id="save"
+            parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        insert into userbaseinfo
+            ( userId, userPwd, userEmail, userSex, userName)
+        values (#{userId},md5(#{userPwd}),#{userEmail},#{userSex},#{userName})
+    </insert>
+    <insert id="followTo" parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        INSERT INTO userfollow(followedId, followerId) VALUES (#{followedId},#{userId})
+    </insert>
+    <update id="updateuserinfo" parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        UPDATE userbaseinfo
+        <set>
+            <if test="userName != null and userName !=''">
+                 userName=#{userName},
+            </if>
+            <if test="userPwd != null and userPwd !=''">
+                userPwd = md5(#{userPwd}),
+            </if>
+            <if test="headPortrait != null and headPortrait != ''">
+               headPortrait = #{headPortrait}
+            </if>
+        </set>
+        where userId = #{userId}
+    </update>
+    <delete id="concleFollow" parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        delete from userfollow where followerId=#{userId} and followedId=#{followedId}
+    </delete>
+    <select id="login"
+            resultType="com.upc.fpbackstage.po.Userbaseinfo"
+            parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        select
+            userId,userName,userSex,userEmail
+        from userbaseinfo
+        where (userId=#{userId} or userName=#{userName})
+          and userPwd=md5(#{userPwd})
+        and userStatus=1
+    </select>
+    <resultMap id="userandfollow" type="com.upc.fpbackstage.po.Userbaseinfo">
+        <id property="userId" column="userId"></id>
+        <result property="userName" column="userName"></result>
+        <result property="userSex" column="userSex"></result>
+        <result property="headPortrait" column="headPortrait"></result>
+        <association property="userfollow"
+                     javaType="com.upc.fpbackstage.po.Userfollow">
+            <id property="followedId" column="followedId"></id>
+            <result property="followerId" column="followerId"></result>
+        </association>
+    </resultMap>
+    <!--我的关注-->
+    <select id="findFocus"
+            resultMap="userandfollow"
+            parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        select b.userId,b.userName,b.headPortrait
+        from  userfollow f,userbaseinfo b
+        where f.followerId = #{userId} and b.userId = f.followedId and b.userStatus=1
+    </select>
+    <!--我的粉丝-->
+    <select id="findFollow"
+            resultMap="userandfollow"
+            parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        select b.userId,b.userName,b.headPortrait
+        from userfollow f,userbaseinfo b
+        where f.followedId = #{userId} and b.userId = f.followerId and b.userStatus = 1
+    </select>
+    <select id="GetAllUserInfo" resultType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        select
+            a.userId,a.userName,a.headPortrait,a.userStatus,
+            COUNT(b.type = 1 or NULL) as postNum,
+            COUNT(b.type=2 or NULL) as blogNum
+        from articleinfo b
+                 right join userbaseinfo a
+                            on a.userId = b.userId
+        GROUP BY a.userId
+    </select>
+    <select id="GetAllUserInfoByParam"
+            resultType="com.upc.fpbackstage.dto.UserbaseinfoDto"
+            parameterType="com.upc.fpbackstage.dto.UserbaseinfoDto">
+        select
+            a.userId,a.userName,a.headPortrait,a.userStatus,
+            COUNT(b.type = 1 or NULL) as postNum,
+            COUNT(b.type=2 or NULL) as blogNum
+        from articleinfo b
+                right join userbaseinfo a
+                on a.userId = b.userId
+        <where>
+        <if test="userId != null and userId != ''">
+        and a.userId like concat('%',#{userId},'%')
+        </if>
+        <if test="userName != null and userName != ''">
+            and a.userName like concat('%',#{userName},'%')
+        </if>
+            <if test="userStatus != null and userStatus != ''">
+                and a.userStatus = #{userStatus}
+            </if>
+            GROUP BY a.userId
+        </where>
+
+    </select>
+</mapper>

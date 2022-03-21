@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upc.fpbackstage.mapper.forumFindPost">
+    <resultMap id="postMap" type="com.upc.fpbackstage.po.Articleinfo">
+        <id property="articleId" column="articleId"></id>
+        <result property="userId" column="userId"></result>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <result property="views" column="views"></result>
+        <result property="date" column="date"></result>
+        <result property="commentCount" column="commentCount"></result>
+        <result property="markedCount" column="markedCount"></result>
+        <result property="likedCount" column="likedCount"></result>
+        <result property="lableId" column="lableId"></result>
+        <association property="userbaseinfo" javaType="com.upc.fpbackstage.po.Userbaseinfo">
+            <result property="userName" column="userName"></result>
+            <result property="headPortrait" column="headPortrait"></result>
+        </association>
+    </resultMap>
+    <select id="findPost" resultMap="postMap">
+        select userName,articleId, articleinfo.userId, type, title, content, views, date, commentCount, markedCount, likedCount, lableId, area
+        from articleinfo,userbaseinfo
+        where articleinfo.userId = userbaseinfo.userId and area=#{area} and type=1 ORDER BY date DESC
+    </select>
+    <select id="findPostByHeat" resultMap="postMap">
+        select userName,articleId, articleinfo.userId, type, title, content, views, date, commentCount, markedCount, likedCount, lableId, area
+        from articleinfo,userbaseinfo
+        where articleinfo.userId = userbaseinfo.userId and area=#{area} and type=1 ORDER BY commentCount DESC
+    </select>
+    <select id="findPostByGood" resultMap="postMap">
+        select userName,articleId, articleinfo.userId, type, title, content, views, date, commentCount, markedCount, likedCount, lableId, area
+        from articleinfo,userbaseinfo
+        where articleinfo.userId = userbaseinfo.userId and area=#{area} and type=1 and lableId=1
+    </select>
+    <select id="findPostById" resultMap="postMap">
+        select a.*,b.userName,b.headPortrait,c.*
+        from articleinfo a,userbaseinfo b,label c
+        where a.type = 1 and a.userId = b.userId and a.articleId = #{articleId} and a.area = c.labelId
+    </select>
+
+</mapper>
